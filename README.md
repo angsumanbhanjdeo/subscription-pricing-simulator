@@ -1,7 +1,6 @@
 SUBSCRIPTION PRICING SIMULATOR
-Model Documentation, Logic & Plain-English Guide
-Angsuman Bhanjdeo  | Senior Commercial & Trading Performance Manager, Sky UK
-February 2026
+Model Documentation, Logic & Explainer Guide
+Angsuman Bhanjdeo  
 
 ⚠  IMPORTANT DISCLAIMER:  This model represents my personal thinking on subscription pricing frameworks. It does NOT reflect the actual pricing processes, methodologies, or internal systems in any places that I have worked. Every company has its own rigorous, proprietary approach to pricing decisions involving teams of specialists, legal, regulatory, and competitive considerations. This is a personal intellectual exercise — a framework I would consider if I were building a subscription business from the ground up.
 
