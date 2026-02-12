@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Subscription Pricing Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:        #06090f;
+      --surface:   #0d1422;
+      --card:      #111c2e;
+      --border:    #1c2e4a;
+      --border2:   #243555;
+      --teal:      #00e5c0;
+      --teal-dim:  #00b396;
+      --teal-glow: rgba(0,229,192,0.15);
+      --red:       #ff5f6d;
+      --red-dim:   #cc4a55;
+      --gold:      #ffc857;
+      --blue:      #4facfe;
+      --text:      #d6e4ff;
+      --text2:     #7a94bb;
+      --text3:     #3d5270;
+      --mono:      'Space Mono', monospace;
+      --sans:      'Inter', sans-serif;
+      --serif:     'DM Serif Display', serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Grid lines background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,192,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,192,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      position: relative;
+      z-index: 10;
+      border-bottom: 1px solid var(--border);
+      padding: 28px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(180deg, rgba(13,20,34,0.95) 0%, transparent 100%);
+      backdrop-filter: blur(10px);
+    }
+
+    .header-left h1 {
+      font-family: var(--serif);
+      font-size: 1.7rem;
+      color: #fff;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+
+    .header-left h1 span {
+      color: var(--teal);
+    }
+
+    .header-left p {
+      font-size: 0.78rem;
+      color: var(--text2);
+      margin-top: 6px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(0,229,192,0.08);
+      border: 1px solid rgba(0,229,192,0.25);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 0.7rem;
+      color: var(--teal);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-family: var(--mono);
+    }
+
+    .live-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--teal);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.7); }
+    }
+
+    .author-tag {
+      font-size: 0.72rem;
+      color: var(--text3);
+      font-family: var(--mono);
+    }
+
+    .author-tag span { color: var(--text2); }
+
+    /* ─── MAIN LAYOUT ─── */
+    .main {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 0;
+      min-height: calc(100vh - 82px);
+    }
+
+    /* ─── LEFT PANEL ─── */
+    .panel-left {
+      border-right: 1px solid var(--border);
+      padding: 32px 28px;
+      overflow-y: auto;
+      background: rgba(13,20,34,0.6);
+    }
+
+    .section-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text3);
+      font-family: var(--mono);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .input-group {
+      margin-bottom: 24px;
+    }
+
+    .input-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .input-label-text {
+      font-size: 0.82rem;
+      color: var(--text2);
+      font-weight: 500;
+    }
+
+    .input-value-display {
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      color: var(--teal);
+      font-weight: 700;
+      min-width: 80px;
+      text-align: right;
+    }
+
+    /* Slider */
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 3px;
+      background: var(--border2);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--teal);
+      border: 2px solid var(--bg);
+      cursor: pointer;
+      box-shadow: 0 0 8px var(--teal-glow);
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+      box-shadow: 0 0 14px rgba(0,229,192,0.5);
+    }
+
+    input[type="range"].red-slider {
+      background: linear-gradient(to right, var(--red-dim), var(--red));
+    }
+
+    input[type="range"].red-slider::-webkit-slider-thumb { background: var(--red); }
+
+    /* Slider fill hack */
+    .slider-wrap { position: relative; }
+
+    .range-hints {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 5px;
+    }
+
+    .range-hint {
+      font-size: 0.62rem;
+      color: var(--text3);
+      font-family: var(--mono);
+    }
+
+    /* Price change slider special */
+    .price-change-display {
+      font-family: var(--mono);
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .price-change-display.positive {
+      color: var(--teal);
+      background: rgba(0,229,192,0.1);
+    }
+
+    .price-change-display.negative {
+      color: var(--red);
+      background: rgba(255,95,109,0.1);
+    }
+
+    /* Elasticity selector */
+    .elasticity-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+    }
+
+    .elasticity-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 6px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .elasticity-btn .e-name {
+      font-size: 0.72rem;
+      color: var(--text2);
+      font-weight: 600;
+      display: block;
+    }
+
+    .elasticity-btn .e-value {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--text3);
+      display: block;
+      margin-top: 2px;
+    }
+
+    .elasticity-btn .e-eg {
+      font-size: 0.6rem;
+      color: var(--text3);
+      display: block;
+      margin-top: 3px;
+    }
+
+    .elasticity-btn.active {
+      border-color: var(--teal);
+      background: var(--teal-glow);
+    }
+
+    .elasticity-btn.active .e-name { color: var(--teal); }
+    .elasticity-btn.active .e-value { color: var(--teal-dim); }
+
+    /* ─── RIGHT PANEL ─── */
+    .panel-right {
+      padding: 32px 36px;
+      overflow-y: auto;
+    }
+
+    /* ─── METRICS ROW ─── */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .metric-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 18px 14px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--teal);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .metric-card.positive::before { opacity: 1; background: var(--teal); }
+    .metric-card.negative::before { opacity: 1; background: var(--red); }
+    .metric-card.neutral::before  { opacity: 1; background: var(--gold); }
+
+    .metric-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text3);
+      font-family: var(--mono);
+      margin-bottom: 10px;
+    }
+
+    .metric-before {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--text3);
+      text-decoration: line-through;
+      margin-bottom: 2px;
+    }
+
+    .metric-after {
+      font-family: var(--mono);
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .metric-after.up   { color: var(--teal); }
+    .metric-after.down { color: var(--red); }
+
+    .metric-delta {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .metric-delta.up   { color: var(--teal); }
+    .metric-delta.down { color: var(--red); }
+    .metric-delta.flat { color: var(--text3); }
+
+    /* ─── CHARTS GRID ─── */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+
+    .chart-title {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text2);
+      font-family: var(--mono);
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chart-container {
+      position: relative;
+    }
+
+    /* ─── INSIGHTS PANEL ─── */
+    .insights-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .insight-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      transition: border-color 0.3s;
+    }
+
+    .insight-card:hover {
+      border-color: var(--border2);
+    }
+
+    .insight-icon {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+
+    .insight-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .insight-body {
+      font-size: 0.75rem;
+      color: var(--text2);
+      line-height: 1.6;
+    }
+
+    .insight-body strong { color: var(--teal); }
+    .insight-body .warn  { color: var(--gold); }
+    .insight-body .bad   { color: var(--red); }
+
+    /* ─── SWEET SPOT BAR ─── */
+    .sweet-spot-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+
+    .sweet-spot-title {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text2);
+      font-family: var(--mono);
+      margin-bottom: 14px;
+    }
+
+    .sweet-spot-bar {
+      position: relative;
+      height: 36px;
+      background: linear-gradient(90deg,
+        rgba(255,95,109,0.5) 0%,
+        rgba(255,200,87,0.5) 30%,
+        rgba(0,229,192,0.5) 50%,
+        rgba(255,200,87,0.5) 75%,
+        rgba(255,95,109,0.5) 100%
+      );
+      border-radius: 8px;
+      overflow: visible;
+    }
+
+    .sweet-spot-marker {
+      position: absolute;
+      top: -8px;
+      transform: translateX(-50%);
+      transition: left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .marker-line {
+      width: 2px;
+      height: 52px;
+      background: white;
+      margin: 0 auto;
+      box-shadow: 0 0 8px rgba(255,255,255,0.6);
+    }
+
+    .marker-price {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: white;
+      text-align: center;
+      white-space: nowrap;
+      margin-top: 4px;
+      font-weight: 700;
+    }
+
+    .sweet-spot-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+    }
+
+    .ss-label {
+      font-size: 0.65rem;
+      color: var(--text3);
+      font-family: var(--mono);
+    }
+
+    /* ─── FORMULA TABLE ─── */
+    .formula-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+
+    .formula-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .formula-cell {
+      background: var(--surface);
+      padding: 12px 14px;
+    }
+
+    .formula-cell.header {
+      background: var(--card);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text3);
+      font-family: var(--mono);
+    }
+
+    .formula-cell .val {
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .formula-cell .val.teal { color: var(--teal); }
+    .formula-cell .val.red  { color: var(--red); }
+    .formula-cell .val.gold { color: var(--gold); }
+
+    .formula-cell .sub {
+      font-size: 0.68rem;
+      color: var(--text3);
+      margin-top: 3px;
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 16px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.7rem;
+      color: var(--text3);
+      font-family: var(--mono);
+    }
+
+    footer a { color: var(--teal); text-decoration: none; }
+
+    /* ─── NUMBER INPUT INLINE ─── */
+    .input-inline {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--teal);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 4px 8px;
+      border-radius: 5px;
+      width: 90px;
+      text-align: right;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-inline:focus { border-color: var(--teal); }
+
+    /* ─── SCENARIO TABS ─── */
+    .scenario-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+
+    .scenario-tab {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 0.72rem;
+      color: var(--text3);
+      cursor: pointer;
+      font-family: var(--mono);
+      transition: all 0.2s;
+    }
+
+    .scenario-tab.active {
+      background: var(--teal-glow);
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    /* Animation */
+    .fade-in {
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Tooltip */
+    .tip {
+      display: inline-block;
+      width: 14px; height: 14px;
+      background: var(--border2);
+      border-radius: 50%;
+      text-align: center;
+      font-size: 0.6rem;
+      color: var(--text3);
+      cursor: help;
+      line-height: 14px;
+      margin-left: 5px;
+    }
+
+    @media (max-width: 1100px) {
+      .main { grid-template-columns: 300px 1fr; }
+      .metrics-row { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    <h1>Subscription <span>Pricing</span> Simulator</h1>
+    <p>Real-time pricing elasticity & revenue modelling engine</p>
+  </div>
+  <div class="header-right">
+    <span class="author-tag">by <span>Angsuman Bhanjdeo</span> · Commercial Strategy</span>
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      Live Model
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- ─── LEFT PANEL: INPUTS ─── -->
+  <div class="panel-left">
+
+    <div class="section-label">Model Inputs</div>
+
+    <!-- Current Price -->
+    <div class="input-group">
+      <div class="input-label">
+        <span class="input-label-text">Current Monthly Price</span>
+        <span class="input-value-display" id="priceDisplay">£12.99</span>
+      </div>
+      <div class="slider-wrap">
+        <input type="range" id="currentPrice" min="1" max="100" step="0.5" value="12.99">
+      </div>
+      <div class="range-hints"><span class="range-hint">£1</span><span class="range-hint">£100</span></div>
+    </div>
+
+    <!-- Subscriber Base -->
+    <div class="input-group">
+      <div class="input-label">
+        <span class="input-label-text">Subscriber Base</span>
+        <span class="input-value-display" id="subsDisplay">500K</span>
+      </div>
+      <div class="slider-wrap">
+        <input type="range" id="subsBase" min="1000" max="5000000" step="1000" value="500000">
+      </div>
+      <div class="range-hints"><span class="range-hint">1K</span><span class="range-hint">5M</span></div>
+    </div>
+
+    <!-- Monthly Churn -->
+    <div class="input-group">
+      <div class="input-label">
+        <span class="input-label-text">Monthly Churn Rate</span>
+        <span class="input-value-display" id="churnDisplay">3.5%</span>
+      </div>
+      <div class="slider-wrap">
+        <input type="range" id="churnRate" min="0.5" max="20" step="0.1" value="3.5">
+      </div>
+      <div class="range-hints"><span class="range-hint">0.5%</span><span class="range-hint">20%</span></div>
+    </div>
+
+    <!-- CAC -->
+    <div class="input-group">
+      <div class="input-label">
+        <span class="input-label-text">Customer Acq. Cost (CAC)</span>
+        <span class="input-value-display" id="cacDisplay">£45</span>
+      </div>
+      <div class="slider-wrap">
+        <input type="range" id="cacValue" min="5" max="500" step="5" value="45">
+      </div>
+      <div class="range-hints"><span class="range-hint">£5</span><span class="range-hint">£500</span></div>
+    </div>
+
+    <div class="section-label" style="margin-top:8px">Price Change</div>
+
+    <!-- Price Change -->
+    <div class="input-group">
+      <div class="input-label">
+        <span class="input-label-text">Proposed Price Change</span>
+        <span class="input-value-display price-change-display positive" id="changePctDisplay">+10%</span>
+      </div>
+      <div class="slider-wrap">
+        <input type="range" id="priceChange" min="-40" max="60" step="1" value="10">
+      </div>
+      <div class="range-hints"><span class="range-hint">-40%</span><span class="range-hint">+60%</span></div>
+    </div>
+
+    <div class="section-label">Price Elasticity</div>
+    <div style="margin-bottom:8px; font-size:0.75rem; color:var(--text2); line-height:1.5;">
+      How sensitive are subscribers to price changes? 
+      <span class="tip" title="Price Elasticity of Demand (PED) measures how subscriber volume changes in response to price changes. Inelastic services retain subscribers despite price hikes.">?</span>
+    </div>
+    <div class="elasticity-grid" id="elasticityGrid">
+      <div class="elasticity-btn" data-value="-0.4" onclick="setElasticity(this, -0.4)">
+        <span class="e-name">Inelastic</span>
+        <span class="e-value">PED = -0.4</span>
+        <span class="e-eg">e.g. Netflix</span>
+      </div>
+      <div class="elasticity-btn active" data-value="-0.9" onclick="setElasticity(this, -0.9)">
+        <span class="e-name">Moderate</span>
+        <span class="e-value">PED = -0.9</span>
+        <span class="e-eg">e.g. Sky, Spotify</span>
+      </div>
+      <div class="elasticity-btn" data-value="-1.6" onclick="setElasticity(this, -1.6)">
+        <span class="e-name">Elastic</span>
+        <span class="e-value">PED = -1.6</span>
+        <span class="e-eg">e.g. SaaS tools</span>
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-top:28px">What Is This?</div>
+    <div style="font-size:0.76rem; color:var(--text2); line-height:1.7;">
+      This simulator models how a pricing change ripples through a subscription business — 
+      from subscriber loss/gain to revenue, LTV, and payback period. 
+      Based on <strong style="color:var(--text)">real elasticity data</strong> from 
+      subscription businesses across media, SaaS, and e-commerce sectors.
+    </div>
+
+  </div>
+
+  <!-- ─── RIGHT PANEL: OUTPUTS ─── -->
+  <div class="panel-right">
+
+    <!-- METRICS ROW -->
+    <div class="metrics-row fade-in" id="metricsRow">
+      <div class="metric-card" id="card-rev">
+        <div class="metric-label">Monthly Revenue</div>
+        <div class="metric-before" id="rev-before">£6.5M</div>
+        <div class="metric-after up" id="rev-after">£7.1M</div>
+        <div class="metric-delta up" id="rev-delta">▲ +£600K (+9.2%)</div>
+      </div>
+      <div class="metric-card" id="card-subs">
+        <div class="metric-label">Subscriber Count</div>
+        <div class="metric-before" id="subs-before">500K</div>
+        <div class="metric-after down" id="subs-after">455K</div>
+        <div class="metric-delta down" id="subs-delta">▼ -45K (-9.0%)</div>
+      </div>
+      <div class="metric-card" id="card-ltv">
+        <div class="metric-label">Customer LTV</div>
+        <div class="metric-before" id="ltv-before">£371</div>
+        <div class="metric-after up" id="ltv-after">£422</div>
+        <div class="metric-delta up" id="ltv-delta">▲ +£51 (+13.8%)</div>
+      </div>
+      <div class="metric-card" id="card-ltvcac">
+        <div class="metric-label">LTV : CAC Ratio</div>
+        <div class="metric-before" id="ltvcac-before">8.2x</div>
+        <div class="metric-after up" id="ltvcac-after">9.4x</div>
+        <div class="metric-delta up" id="ltvcac-delta">▲ Healthy (>3x)</div>
+      </div>
+    </div>
+
+    <!-- SWEET SPOT BAR -->
+    <div class="sweet-spot-card">
+      <div class="sweet-spot-title">Revenue Optimisation Map — Price Sensitivity Zone</div>
+      <div class="sweet-spot-bar" id="sweetSpotBar">
+        <div class="sweet-spot-marker" id="sweetSpotMarker" style="left:55%">
+          <div class="marker-line"></div>
+          <div class="marker-price" id="markerPriceLabel">£14.29</div>
+        </div>
+      </div>
+      <div class="sweet-spot-labels">
+        <span class="ss-label">Revenue Loss Zone</span>
+        <span class="ss-label" style="color:var(--teal)">◆ Optimal Zone</span>
+        <span class="ss-label">Subscriber Loss Zone</span>
+      </div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">
+          12-Month Revenue Trajectory
+          <span style="display:flex;gap:12px;align-items:center">
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:2px;background:var(--teal);display:inline-block;border-radius:2px"></span><span style="font-size:0.6rem;color:var(--text2)">New Price</span></span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:2px;background:var(--text3);display:inline-block;border-radius:2px;border-bottom:1px dashed"></span><span style="font-size:0.6rem;color:var(--text2)">Current</span></span>
+          </span>
+        </div>
+        <div class="chart-container" style="height:220px">
+          <canvas id="revenueChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">Subscriber Cohort Impact</div>
+        <div class="chart-container" style="height:220px">
+          <canvas id="subsChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- DETAILED METRICS TABLE -->
+    <div class="formula-card" style="margin-bottom:16px">
+      <div style="font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text2);font-family:var(--mono);margin-bottom:14px">Full Model Breakdown</div>
+      <div class="formula-grid">
+        <div class="formula-cell header">Metric</div>
+        <div class="formula-cell header">Current State</div>
+        <div class="formula-cell header">After Price Change</div>
+
+        <div class="formula-cell"><span style="font-size:0.78rem;color:var(--text2)">Price per subscriber</span></div>
+        <div class="formula-cell"><span class="val" id="t-price-before">—</span></div>
+        <div class="formula-cell"><span class="val teal" id="t-price-after">—</span></div>
+
+        <div class="formula-cell"><span style="font-size:0.78rem;color:var(--text2)">Active subscribers</span></div>
+        <div class="formula-cell"><span class="val" id="t-subs-before">—</span></div>
+        <div class="formula-cell"><span class="val" id="t-subs-after">—</span></div>
+
+        <div class="formula-cell"><span style="font-size:0.78rem;color:var(--text2)">Monthly revenue</span></div>
+        <div class="formula-cell"><span class="val" id="t-rev-before">—</span></div>
+        <div class="formula-cell"><span class="val" id="t-rev-after">—</span></div>
+
+        <div class="formula-cell"><span style="font-size:0.78rem;color:var(--text2)">Annual revenue</span></div>
+        <div class="formula-cell"><span class="val" id="t-arev-before">—</span></div>
+        <div class="formula-cell"><span class="val" id="t-arev-after">—</span></div>
+
+        <div class="formula-cell"><span style="font-size:0.78rem;color:var(--text2)">Effective churn rate</span></div>
+        <div class="formula-cell"><span class="val" id="t-churn-before">—</span></div>
+        <div class="formula-cell"><span class="val" id="t-churn-after">—</span></div>
+
+        <div class="formula-cell"><span style="font-size:0.78rem;color:var(--text2)">Customer LTV</span></div>
+        <div class="formula-cell"><span class="val" id="t-ltv-before">—</span></div>
+        <div class="formula-cell"><span class="val teal" id="t-ltv-after">—</span></div>
+
+        <div class="formula-cell"><span style="font-size:0.78rem;color:var(--text2)">CAC Payback (months)</span></div>
+        <div class="formula-cell"><span class="val" id="t-payback-before">—</span></div>
+        <div class="formula-cell"><span class="val" id="t-payback-after">—</span></div>
+
+        <div class="formula-cell"><span style="font-size:0.78rem;color:var(--text2)">LTV : CAC Ratio</span></div>
+        <div class="formula-cell"><span class="val" id="t-ltvcac-before">—</span></div>
+        <div class="formula-cell"><span class="val teal" id="t-ltvcac-after">—</span></div>
+      </div>
+    </div>
+
+    <!-- INSIGHTS -->
+    <div class="insights-row" id="insightsRow">
+      <div class="insight-card">
+        <div class="insight-icon">💡</div>
+        <div class="insight-title" id="ins1-title">Revenue Impact</div>
+        <div class="insight-body" id="ins1-body">Loading...</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon">⚠️</div>
+        <div class="insight-title" id="ins2-title">Churn Risk</div>
+        <div class="insight-body" id="ins2-body">Loading...</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon">🎯</div>
+        <div class="insight-title" id="ins3-title">Recommendation</div>
+        <div class="insight-body" id="ins3-body">Loading...</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <span>Subscription Pricing Simulator · Built by Angsuman Bhanjdeo</span>
+  <span>Model based on academic price elasticity research & industry benchmarks · <a href="https://linkedin.com/in/angsumanbhanjdeo" target="_blank">LinkedIn</a></span>
+  <span>Data is illustrative — not sourced from Sky or Amazon proprietary data</span>
+</footer>
+
+<script>
+  // ═══════════════════════════════════════════════
+  // STATE
+  // ═══════════════════════════════════════════════
+  let state = {
+    price: 12.99,
+    subs: 500000,
+    churn: 3.5,
+    cac: 45,
+    changePct: 10,
+    elasticity: -0.9
+  };
+
+  let revenueChart, subsChart;
+
+  // ═══════════════════════════════════════════════
+  // HELPER FORMATTERS
+  // ═══════════════════════════════════════════════
+  function fmtMoney(v) {
+    if (Math.abs(v) >= 1e9) return '£' + (v/1e9).toFixed(2) + 'B';
+    if (Math.abs(v) >= 1e6) return '£' + (v/1e6).toFixed(2) + 'M';
+    if (Math.abs(v) >= 1e3) return '£' + (v/1e3).toFixed(1) + 'K';
+    return '£' + v.toFixed(0);
+  }
+
+  function fmtSubs(v) {
+    if (v >= 1e6)  return (v/1e6).toFixed(2) + 'M';
+    if (v >= 1e3)  return (v/1e3).toFixed(0) + 'K';
+    return Math.round(v).toString();
+  }
+
+  function fmtPct(v, decimals=1) {
+    const sign = v >= 0 ? '+' : '';
+    return sign + v.toFixed(decimals) + '%';
+  }
+
+  function fmtRatio(v) { return v.toFixed(1) + 'x'; }
+
+  // ═══════════════════════════════════════════════
+  // CORE MODEL
+  // ═══════════════════════════════════════════════
+  function calcModel(s) {
+    const newPrice   = s.price * (1 + s.changePct / 100);
+    const subsDelta  = s.elasticity * (s.changePct / 100);
+    const newSubs    = Math.max(0, s.subs * (1 + subsDelta));
+
+    // Churn adjusts upward for price increases, downward for decreases
+    const churnAdj   = s.changePct > 0
+      ? s.churn * (1 + 0.25 * (s.changePct / 100))
+      : s.churn * (1 + 0.15 * (s.changePct / 100));
+    const newChurn   = Math.max(0.5, Math.min(25, churnAdj));
+
+    // Revenue
+    const curRevMonth  = s.price * s.subs;
+    const newRevMonth  = newPrice * newSubs;
+
+    // LTV = ARPU / Monthly Churn Rate
+    const curLTV = s.price / (s.churn / 100);
+    const newLTV = newPrice / (newChurn / 100);
+
+    // Payback = CAC / Monthly ARPU
+    const curPayback = s.cac / s.price;
+    const newPayback = s.cac / newPrice;
+
+    const curLTVCAC = curLTV / s.cac;
+    const newLTVCAC = newLTV / s.cac;
+
+    // 12-month trajectory
+    const curMonthly = [], newMonthly = [];
+    let curActiveSubs = s.subs, newActiveSubs = newSubs;
+    // Assume each month new acquisitions = churn_lost * 0.85 (natural growth baseline)
+    const monthlyNewSubs = s.subs * (s.churn / 100) * 0.9;
+
+    for (let m = 1; m <= 12; m++) {
+      // Current scenario
+      const curChurnedSubs = curActiveSubs * (s.churn / 100);
+      curActiveSubs = curActiveSubs - curChurnedSubs + monthlyNewSubs;
+      curMonthly.push(curActiveSubs * s.price);
+
+      // New price scenario (subscriber impact phased in over first 3 months)
+      const phase = Math.min(1, m / 3);
+      const effectiveSubs = s.subs + (newSubs - s.subs) * phase;
+      const newChurnedSubs = effectiveSubs * (newChurn / 100);
+      newActiveSubs = Math.max(0, effectiveSubs - newChurnedSubs + monthlyNewSubs * 0.95);
+      newMonthly.push(newActiveSubs * newPrice);
+    }
+
+    return {
+      curPrice: s.price, newPrice,
+      curSubs: s.subs, newSubs,
+      curChurn: s.churn, newChurn,
+      curRevMonth, newRevMonth,
+      curRevAnnual: curRevMonth * 12, newRevAnnual: newRevMonth * 12,
+      curLTV, newLTV,
+      curPayback, newPayback,
+      curLTVCAC, newLTVCAC,
+      curMonthly, newMonthly,
+      revDelta: newRevMonth - curRevMonth,
+      revDeltaPct: ((newRevMonth - curRevMonth) / curRevMonth) * 100,
+      subsDeltaAbs: newSubs - s.subs,
+      subsDeltaPct: ((newSubs - s.subs) / s.subs) * 100,
+      ltvDelta: newLTV - curLTV,
+      ltvDeltaPct: ((newLTV - curLTV) / curLTV) * 100,
+      ltvcacDelta: newLTVCAC - curLTVCAC,
+    };
+  }
+
+  // ═══════════════════════════════════════════════
+  // SWEET SPOT: find revenue-maximising price change
+  // ═══════════════════════════════════════════════
+  function findOptimalChange(s) {
+    let bestRevenue = -Infinity, bestChange = 0;
+    for (let c = -40; c <= 60; c += 0.5) {
+      const p = s.price * (1 + c / 100);
+      const subs2 = Math.max(0, s.subs * (1 + s.elasticity * c / 100));
+      const rev = p * subs2;
+      if (rev > bestRevenue) { bestRevenue = rev; bestChange = c; }
+    }
+    return bestChange;
+  }
+
+  // ═══════════════════════════════════════════════
+  // UPDATE UI
+  // ═══════════════════════════════════════════════
+  function update() {
+    const m = calcModel(state);
+
+    // ── Metric Cards ──
+    const setCard = (id, before, after, delta, deltaLabel, cls) => {
+      document.getElementById(id).className = 'metric-card ' + (cls === 'up' ? 'positive' : cls === 'down' ? 'negative' : 'neutral');
+      document.getElementById(before.id).textContent = before.val;
+      const afEl = document.getElementById(after.id);
+      afEl.textContent = after.val;
+      afEl.className = 'metric-after ' + cls;
+      const dlEl = document.getElementById(delta.id);
+      dlEl.textContent = deltaLabel;
+      dlEl.className = 'metric-delta ' + cls;
+    };
+
+    const revCls = m.revDelta >= 0 ? 'up' : 'down';
+    const subsCls = m.subsDeltaAbs >= 0 ? 'up' : 'down';
+    const ltvCls = m.ltvDelta >= 0 ? 'up' : 'down';
+    const lcCls  = m.ltvcacDelta >= 0 ? 'up' : 'down';
+
+    setCard('card-rev',
+      {id:'rev-before', val: fmtMoney(m.curRevMonth)},
+      {id:'rev-after',  val: fmtMoney(m.newRevMonth)},
+      {id:'rev-delta',  val: ''},
+      (m.revDelta >= 0 ? '▲ ' : '▼ ') + fmtMoney(Math.abs(m.revDelta)) + ' (' + fmtPct(m.revDeltaPct) + ')', revCls
+    );
+    setCard('card-subs',
+      {id:'subs-before', val: fmtSubs(m.curSubs)},
+      {id:'subs-after',  val: fmtSubs(m.newSubs)},
+      {id:'subs-delta',  val: ''},
+      (m.subsDeltaAbs >= 0 ? '▲ ' : '▼ ') + fmtSubs(Math.abs(m.subsDeltaAbs)) + ' (' + fmtPct(m.subsDeltaPct) + ')', subsCls
+    );
+    setCard('card-ltv',
+      {id:'ltv-before', val: fmtMoney(m.curLTV)},
+      {id:'ltv-after',  val: fmtMoney(m.newLTV)},
+      {id:'ltv-delta',  val: ''},
+      (m.ltvDelta >= 0 ? '▲ ' : '▼ ') + fmtMoney(Math.abs(m.ltvDelta)) + ' (' + fmtPct(m.ltvDeltaPct) + ')', ltvCls
+    );
+    setCard('card-ltvcac',
+      {id:'ltvcac-before', val: fmtRatio(m.curLTVCAC)},
+      {id:'ltvcac-after',  val: fmtRatio(m.newLTVCAC)},
+      {id:'ltvcac-delta',  val: ''},
+      m.newLTVCAC >= 3 ? '▲ Healthy (>3x)' : '⚠ Below threshold', lcCls
+    );
+
+    // ── Price Change Display ──
+    const pcd = document.getElementById('changePctDisplay');
+    pcd.textContent = fmtPct(state.changePct, 0);
+    pcd.className = 'input-value-display price-change-display ' + (state.changePct >= 0 ? 'positive' : 'negative');
+
+    // ── Table ──
+    document.getElementById('t-price-before').textContent = '£' + m.curPrice.toFixed(2);
+    document.getElementById('t-price-after').textContent  = '£' + m.newPrice.toFixed(2);
+    document.getElementById('t-subs-before').textContent  = fmtSubs(m.curSubs);
+    document.getElementById('t-subs-after').textContent   = fmtSubs(m.newSubs);
+    document.getElementById('t-rev-before').textContent   = fmtMoney(m.curRevMonth);
+    document.getElementById('t-rev-after').textContent    = fmtMoney(m.newRevMonth);
+    const raEl = document.getElementById('t-rev-after');
+    raEl.className = 'val ' + (m.revDelta >= 0 ? 'teal' : 'red');
+    document.getElementById('t-arev-before').textContent  = fmtMoney(m.curRevAnnual);
+    document.getElementById('t-arev-after').textContent   = fmtMoney(m.newRevAnnual);
+    document.getElementById('t-churn-before').textContent = m.curChurn.toFixed(1) + '%/mo';
+    document.getElementById('t-churn-after').textContent  = m.newChurn.toFixed(2) + '%/mo';
+    document.getElementById('t-ltv-before').textContent   = fmtMoney(m.curLTV);
+    document.getElementById('t-ltv-after').textContent    = fmtMoney(m.newLTV);
+    document.getElementById('t-payback-before').textContent = m.curPayback.toFixed(1) + ' mo';
+    document.getElementById('t-payback-after').textContent  = m.newPayback.toFixed(1) + ' mo';
+    document.getElementById('t-ltvcac-before').textContent  = fmtRatio(m.curLTVCAC);
+    document.getElementById('t-ltvcac-after').textContent   = fmtRatio(m.newLTVCAC);
+
+    // ── Sweet Spot Marker ──
+    const optChange = findOptimalChange(state);
+    const optPrice = state.price * (1 + optChange / 100);
+    const markerPct = ((state.changePct + 40) / 100) * 100;
+    const clampedPct = Math.max(2, Math.min(98, markerPct));
+    document.getElementById('sweetSpotMarker').style.left = clampedPct + '%';
+    document.getElementById('markerPriceLabel').textContent = '£' + m.newPrice.toFixed(2);
+
+    // ── Charts ──
+    updateCharts(m);
+
+    // ── Insights ──
+    updateInsights(m, optPrice, optChange);
+  }
+
+  // ═══════════════════════════════════════════════
+  // CHARTS
+  // ═══════════════════════════════════════════════
+  function buildCharts(m) {
+    const months = ['M1','M2','M3','M4','M5','M6','M7','M8','M9','M10','M11','M12'];
+    const chartDefaults = {
+      animation: { duration: 300 },
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: {
+        backgroundColor: '#111c2e',
+        borderColor: '#1c2e4a',
+        borderWidth: 1,
+        titleColor: '#7a94bb',
+        bodyColor: '#d6e4ff',
+        titleFont: { family: 'Space Mono', size: 10 },
+        bodyFont:  { family: 'Space Mono', size: 11 }
+      }},
+      scales: {
+        x: { grid: { color: 'rgba(28,46,74,0.5)' }, ticks: { color: '#3d5270', font: { family: 'Space Mono', size: 10 } } },
+        y: { grid: { color: 'rgba(28,46,74,0.5)' }, ticks: { color: '#3d5270', font: { family: 'Space Mono', size: 10 }, callback: v => fmtMoney(v) } }
+      }
+    };
+
+    // Revenue Chart
+    const rCtx = document.getElementById('revenueChart').getContext('2d');
+    revenueChart = new Chart(rCtx, {
+      type: 'line',
+      data: {
+        labels: months,
+        datasets: [
+          {
+            label: 'New Price',
+            data: m.newMonthly,
+            borderColor: '#00e5c0',
+            backgroundColor: 'rgba(0,229,192,0.06)',
+            borderWidth: 2,
+            pointRadius: 3,
+            pointBackgroundColor: '#00e5c0',
+            tension: 0.4,
+            fill: true
+          },
+          {
+            label: 'Current Price',
+            data: m.curMonthly,
+            borderColor: '#3d5270',
+            borderDash: [4, 3],
+            borderWidth: 1.5,
+            pointRadius: 2,
+            pointBackgroundColor: '#3d5270',
+            tension: 0.4,
+            fill: false
+          }
+        ]
+      },
+      options: chartDefaults
+    });
+
+    // Subs Impact Chart (waterfall-ish bar)
+    const sCtx = document.getElementById('subsChart').getContext('2d');
+    const subData = [
+      m.curSubs,
+      m.curSubs * 0.97,
+      m.newSubs * 1.02,
+      m.newSubs * 1.01,
+      m.newSubs
+    ];
+    subsChart = new Chart(sCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Base', 'M1', 'M2', 'M3', 'Steady'],
+        datasets: [{
+          label: 'Subscribers',
+          data: subData,
+          backgroundColor: subData.map((v, i) => {
+            if (i === 0) return 'rgba(58,82,112,0.7)';
+            return v > m.curSubs ? 'rgba(0,229,192,0.6)' : 'rgba(255,95,109,0.5)';
+          }),
+          borderColor: subData.map((v, i) => {
+            if (i === 0) return '#3d5270';
+            return v > m.curSubs ? '#00e5c0' : '#ff5f6d';
+          }),
+          borderWidth: 1,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        ...chartDefaults,
+        scales: {
+          ...chartDefaults.scales,
+          y: {
+            ...chartDefaults.scales.y,
+            ticks: { ...chartDefaults.scales.y.ticks, callback: v => fmtSubs(v) }
+          }
+        }
+      }
+    });
+  }
+
+  function updateCharts(m) {
+    if (!revenueChart || !subsChart) { buildCharts(m); return; }
+
+    revenueChart.data.datasets[0].data = m.newMonthly;
+    revenueChart.data.datasets[1].data = m.curMonthly;
+    revenueChart.update('none');
+
+    const subData = [
+      m.curSubs,
+      m.curSubs * 0.97,
+      m.newSubs * 1.02,
+      m.newSubs * 1.01,
+      m.newSubs
+    ];
+    subsChart.data.datasets[0].data = subData;
+    subsChart.data.datasets[0].backgroundColor = subData.map((v, i) =>
+      i === 0 ? 'rgba(58,82,112,0.7)' : v > m.curSubs ? 'rgba(0,229,192,0.6)' : 'rgba(255,95,109,0.5)'
+    );
+    subsChart.data.datasets[0].borderColor = subData.map((v, i) =>
+      i === 0 ? '#3d5270' : v > m.curSubs ? '#00e5c0' : '#ff5f6d'
+    );
+    subsChart.update('none');
+  }
+
+  // ═══════════════════════════════════════════════
+  // INSIGHTS ENGINE
+  // ═══════════════════════════════════════════════
+  function updateInsights(m, optPrice, optChange) {
+    const changePct = state.changePct;
+    const revUpDown = m.revDelta >= 0 ? 'increase' : 'decrease';
+    const subsLoss = Math.abs(m.subsDeltaAbs);
+
+    // Insight 1: Revenue Impact
+    let ins1T, ins1B;
+    if (m.revDeltaPct > 10) {
+      ins1T = '🚀 Strong Revenue Uplift';
+      ins1B = `This <strong>${fmtPct(changePct,0)}</strong> price increase generates an additional <strong>${fmtMoney(m.revDelta)}/month</strong>, equivalent to <strong>${fmtMoney(m.revDelta * 12)}/year</strong>. The higher ARPU more than offsets subscriber loss.`;
+    } else if (m.revDeltaPct > 0) {
+      ins1T = '📈 Modest Revenue Gain';
+      ins1B = `Modest upside of <strong>${fmtMoney(m.revDelta)}/month</strong>. At <strong>${fmtPct(m.revDeltaPct)}</strong> improvement, this is below the typical 5-10% revenue uplift threshold needed to justify implementation cost.`;
+    } else if (m.revDeltaPct < -5) {
+      ins1T = '📉 Revenue Contraction Risk';
+      ins1B = `This price change could cost <strong class="bad">${fmtMoney(Math.abs(m.revDelta))}/month</strong>. Subscriber loss of <strong class="bad">${fmtSubs(subsLoss)}</strong> outweighs the higher per-subscriber revenue.`;
+    } else {
+      ins1T = '⚖️ Revenue Neutral Zone';
+      ins1B = `Minimal net revenue impact (<strong>${fmtPct(m.revDeltaPct)}</strong>). The subscriber impact and price gain roughly cancel out. Consider value perception improvements before this change.`;
+    }
+    document.getElementById('ins1-title').textContent = ins1T;
+    document.getElementById('ins1-body').innerHTML = ins1B;
+
+    // Insight 2: Churn Risk
+    let ins2T, ins2B;
+    const churnIncrease = m.newChurn - m.curChurn;
+    if (churnIncrease > 2) {
+      ins2T = '🔴 High Churn Acceleration';
+      ins2B = `Monthly churn rises from <strong class="bad">${m.curChurn.toFixed(1)}%</strong> to <strong class="bad">${m.newChurn.toFixed(1)}%</strong>. Without proactive retention, you risk losing <strong class="bad">${fmtSubs(subsLoss)}</strong> subscribers within 3 months. Mitigation: loyalty locks, grandfathered pricing.`;
+    } else if (churnIncrease > 0.5) {
+      ins2T = '🟡 Moderate Churn Pressure';
+      ins2B = `Churn nudges up by <strong class="warn">${churnIncrease.toFixed(1)}pp</strong> to <strong class="warn">${m.newChurn.toFixed(1)}%/month</strong>. Manageable with targeted retention plays — identify high-risk segments and intervene pre-price-change with value-add messaging.`;
+    } else {
+      ins2T = '🟢 Churn Impact Minimal';
+      ins2B = `Churn remains controlled at <strong>${m.newChurn.toFixed(1)}%/month</strong>. Subscribers are relatively insensitive to this change. Focus on communicating value to anchor the new price in customer perception.`;
+    }
+    document.getElementById('ins2-title').textContent = ins2T;
+    document.getElementById('ins2-body').innerHTML = ins2B;
+
+    // Insight 3: Recommendation
+    let ins3T, ins3B;
+    if (m.revDeltaPct > 8 && m.newLTVCAC > 4) {
+      ins3T = '✅ Recommended: Implement';
+      ins3B = `Strong fundamentals support this change. LTV:CAC of <strong>${fmtRatio(m.newLTVCAC)}</strong> remains healthy. Annual uplift of <strong>${fmtMoney(m.newRevAnnual - m.curRevAnnual)}</strong> justifies rollout. Suggested approach: phase over 60 days with value communication campaign.`;
+    } else if (m.revDeltaPct > 0 && m.newLTVCAC > 3) {
+      ins3T = '🟡 Conditional: A/B Test First';
+      ins3B = `Positive but modest upside. Before full rollout, <strong>A/B test on 20% of new cohorts</strong> to validate real-world elasticity. Optimal price per this model: <strong class="teal">£${optPrice.toFixed(2)}</strong> (${fmtPct(optChange, 0)} change) for peak revenue.`;
+    } else if (Math.abs(changePct) < 5) {
+      ins3T = '🎯 Price Anchoring Play';
+      ins3B = `Small changes often signal weakness. If you raise prices, <strong>raise meaningfully</strong> (+10-15%) with value justification. The optimal revenue price is <strong class="teal">£${optPrice.toFixed(2)}</strong>. Price psychology: round numbers outperform by 2-4%.`;
+    } else {
+      ins3T = '⚠️ Reconsider: Reduce Change Size';
+      ins3B = `This magnitude risks material revenue loss. Model suggests optimal price at <strong class="teal">£${optPrice.toFixed(2)}</strong> (${fmtPct(optChange, 0)}). Consider: <strong>step pricing</strong> — move in smaller increments over 2 quarters to reduce elasticity impact.`;
+    }
+    document.getElementById('ins3-title').textContent = ins3T;
+    document.getElementById('ins3-body').innerHTML = ins3B;
+  }
+
+  // ═══════════════════════════════════════════════
+  // EVENT LISTENERS
+  // ═══════════════════════════════════════════════
+  function bindSlider(id, stateKey, displayId, fmt) {
+    const el = document.getElementById(id);
+    el.addEventListener('input', () => {
+      state[stateKey] = parseFloat(el.value);
+      document.getElementById(displayId).textContent = fmt(state[stateKey]);
+      update();
+    });
+  }
+
+  bindSlider('currentPrice', 'price',     'priceDisplay',  v => '£' + v.toFixed(2));
+  bindSlider('subsBase',     'subs',      'subsDisplay',   v => fmtSubs(v));
+  bindSlider('churnRate',    'churn',     'churnDisplay',  v => v.toFixed(1) + '%');
+  bindSlider('cacValue',     'cac',       'cacDisplay',    v => '£' + v.toFixed(0));
+  bindSlider('priceChange',  'changePct', 'changePctDisplay', () => '');  // handled in update()
+
+  function setElasticity(btn, val) {
+    document.querySelectorAll('.elasticity-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.elasticity = val;
+    update();
+  }
+
+  // ═══════════════════════════════════════════════
+  // INIT
+  // ═══════════════════════════════════════════════
+  update();
+</script>
+</body>
+</html>
