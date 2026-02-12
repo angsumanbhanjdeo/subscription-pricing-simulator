@@ -661,9 +661,214 @@
       margin-left: 5px;
     }
 
+    /* ─── NARROW DESKTOP (≤ 1100px) ─── */
     @media (max-width: 1100px) {
       .main { grid-template-columns: 300px 1fr; }
       .metrics-row { grid-template-columns: repeat(2, 1fr); }
+      .panel-right { padding: 24px 24px; }
+    }
+
+    /* ─── MOBILE TAB BAR (hidden on desktop) ─── */
+    .mobile-tabs { display: none; }
+
+    .mobile-tab {
+      flex: 1;
+      padding: 13px 8px;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text3);
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .mobile-tab.active {
+      color: var(--teal);
+      border-bottom-color: var(--teal);
+      background: rgba(0,229,192,0.05);
+    }
+
+    /* ─── FORMULA SCROLL WRAPPER ─── */
+    .formula-scroll-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 4px;
+    }
+
+    /* ─── TABLET + MOBILE (≤ 860px) ─── */
+    @media (max-width: 860px) {
+      /* Header */
+      header {
+        padding: 13px 16px;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .header-left h1 { font-size: 1.2rem; }
+      .header-left p  { font-size: 0.67rem; margin-top: 2px; }
+      .author-tag     { display: none; }
+      .live-badge     { padding: 4px 10px; font-size: 0.64rem; }
+
+      /* Tab bar shows */
+      .mobile-tabs {
+        display: flex;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+      }
+
+      /* Stacked layout */
+      .main { display: block; min-height: auto; }
+
+      .panel-left {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 18px 16px 22px;
+        overflow-y: visible;
+      }
+      .panel-right {
+        padding: 18px 16px 26px;
+        overflow-y: visible;
+      }
+
+      /* Panel visibility toggle */
+      .panel-left.hidden,
+      .panel-right.hidden { display: none; }
+
+      /* Metrics 2×2 */
+      .metrics-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .metric-card  { padding: 13px 13px 11px; }
+      .metric-after { font-size: 1.15rem; }
+      .metric-label { font-size: 0.62rem; }
+      .metric-delta { font-size: 0.67rem; }
+
+      /* Sweet spot bar */
+      .sweet-spot-card  { padding: 14px 14px 12px; }
+      .sweet-spot-title { font-size: 0.62rem; margin-bottom: 8px; }
+      .sweet-spot-bar   { height: 28px; }
+      /* hide middle label to avoid overlap */
+      .sweet-spot-labels span:nth-child(2) { display: none; }
+      .ss-label { font-size: 0.58rem; }
+
+      /* Charts — stack + fix heights */
+      .charts-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .chart-container { height: 195px !important; }
+      /* Chart title: hide the legend row to avoid overflow */
+      .chart-title > span { display: none !important; }
+      .chart-title { display: block; }
+
+      /* Formula table — horizontal scroll on mobile */
+      .formula-card {
+        padding: 16px;
+        overflow: hidden;
+      }
+      .formula-scroll-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-top: 10px;
+        border-radius: 6px;
+        padding-bottom: 6px;
+      }
+      .formula-grid {
+        min-width: 380px;
+        grid-template-columns: 1.5fr 1fr 1fr;
+        font-size: 0.72rem;
+      }
+      .formula-cell         { padding: 9px 8px; }
+      .formula-cell .val    { font-size: 0.78rem; }
+      .formula-cell .sub    { font-size: 0.6rem; }
+      .formula-cell.header  { font-size: 0.6rem; }
+
+      /* Insights — stack */
+      .insights-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .insight-card { padding: 13px; }
+      .insight-body { font-size: 0.73rem; }
+
+      /* Scenario tabs */
+      .scenario-tabs { flex-wrap: wrap; gap: 5px; }
+      .scenario-tab  { font-size: 0.65rem; padding: 5px 10px; }
+
+      /* Footer */
+      footer {
+        flex-direction: column;
+        gap: 4px;
+        padding: 12px 16px;
+        text-align: center;
+        font-size: 0.6rem;
+      }
+      footer span:last-child { display: none; }
+    }
+
+    /* ─── PHONE (≤ 480px) ─── */
+    @media (max-width: 480px) {
+      header { padding: 11px 13px; }
+      .header-left h1 { font-size: 1.05rem; }
+
+      .panel-left  { padding: 14px 13px 20px; }
+      .panel-right { padding: 14px 13px 22px; }
+
+      /* Metrics */
+      .metrics-row { gap: 8px; }
+      .metric-card   { padding: 11px 10px 9px; }
+      .metric-after  { font-size: 1.0rem; }
+      .metric-before { font-size: 0.72rem; }
+
+      /* Bigger slider thumbs for fat fingers */
+      input[type="range"] { height: 5px; }
+      input[type="range"]::-webkit-slider-thumb {
+        width: 24px; height: 24px;
+      }
+      .input-group { margin-bottom: 26px; }
+
+      /* Elasticity buttons */
+      .elasticity-btn        { padding: 9px 4px; }
+      .elasticity-btn .e-name  { font-size: 0.68rem; }
+      .elasticity-btn .e-value { font-size: 0.62rem; }
+      .elasticity-btn .e-eg    { display: none; }
+
+      /* Charts smaller */
+      .chart-container { height: 165px !important; }
+
+      /* Sweet spot */
+      .sweet-spot-bar  { height: 24px; }
+      .sweet-spot-labels { display: none; }
+      .marker-line     { height: 38px; }
+      .marker-price    { font-size: 0.62rem; }
+
+      /* Formula even tighter */
+      .formula-grid {
+        min-width: 340px;
+        grid-template-columns: 1.4fr 1fr 1fr;
+      }
+      .formula-cell      { padding: 7px 6px; }
+      .formula-cell .val { font-size: 0.7rem; }
+    }
+
+    /* ─── VERY SMALL (≤ 360px) ─── */
+    @media (max-width: 360px) {
+      .header-left h1 { font-size: 0.95rem; }
+      .metrics-row    { gap: 6px; }
+      .metric-after   { font-size: 0.92rem; }
+      .chart-container { height: 148px !important; }
+      .formula-grid   { min-width: 300px; }
     }
   </style>
 </head>
@@ -673,7 +878,7 @@
 <header>
   <div class="header-left">
     <h1>Subscription <span>Pricing</span> Simulator</h1>
-    <p>Pricing elasticity & revenue modelling simulator</p>
+    <p>Real-time pricing elasticity & revenue modelling engine</p>
   </div>
   <div class="header-right">
     <span class="author-tag">by <span>Angsuman Bhanjdeo</span> · Commercial Strategy</span>
@@ -683,6 +888,12 @@
     </div>
   </div>
 </header>
+
+<!-- MOBILE TABS (hidden on desktop) -->
+<div class="mobile-tabs" id="mobileTabs">
+  <button class="mobile-tab active" id="tab-inputs"  onclick="switchTab('inputs')">⚙ Inputs</button>
+  <button class="mobile-tab"        id="tab-outputs" onclick="switchTab('outputs')">📊 Results</button>
+</div>
 
 <!-- MAIN -->
 <div class="main">
@@ -860,6 +1071,7 @@
     <!-- DETAILED METRICS TABLE -->
     <div class="formula-card" style="margin-bottom:16px">
       <div style="font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text2);font-family:var(--mono);margin-bottom:14px">Full Model Breakdown</div>
+      <div class="formula-scroll-wrap">
       <div class="formula-grid">
         <div class="formula-cell header">Metric</div>
         <div class="formula-cell header">Current State</div>
@@ -897,6 +1109,7 @@
         <div class="formula-cell"><span class="val" id="t-ltvcac-before">—</span></div>
         <div class="formula-cell"><span class="val teal" id="t-ltvcac-after">—</span></div>
       </div>
+      </div><!-- end formula-scroll-wrap -->
     </div>
 
     <!-- INSIGHTS -->
@@ -924,8 +1137,8 @@
 <!-- FOOTER -->
 <footer>
   <span>Subscription Pricing Simulator · Built by Angsuman Bhanjdeo</span>
-  <span>Model built on concept of price elasticity and general industry benchmarks · <a href="https://linkedin.com/in/angsumanbhanjdeo" target="_blank">LinkedIn</a></span>
-  <span>Data is illustrative for learning purposes only</span>
+  <span>Model based on academic price elasticity research & industry benchmarks · <a href="https://linkedin.com/in/angsumanbhanjdeo" target="_blank">LinkedIn</a></span>
+  <span>Data is illustrative — not sourced from Sky or Amazon proprietary data</span>
 </footer>
 
 <script>
@@ -1344,6 +1557,44 @@
     state.elasticity = val;
     update();
   }
+
+  // ═══════════════════════════════════════════════
+  // MOBILE TAB SWITCHING
+  // ═══════════════════════════════════════════════
+  function switchTab(tab) {
+    const left  = document.querySelector('.panel-left');
+    const right = document.querySelector('.panel-right');
+    document.getElementById('tab-inputs').classList.toggle('active',  tab === 'inputs');
+    document.getElementById('tab-outputs').classList.toggle('active', tab === 'outputs');
+    if (tab === 'inputs') {
+      left.classList.remove('hidden');
+      right.classList.add('hidden');
+    } else {
+      left.classList.add('hidden');
+      right.classList.remove('hidden');
+      // Charts need a tick to recalculate after panel reveals
+      setTimeout(() => {
+        if (revenueChart) revenueChart.resize();
+        if (subsChart)    subsChart.resize();
+        window.dispatchEvent(new Event('resize'));
+      }, 50);
+    }
+  }
+
+  // On mobile, start with inputs shown; auto-switch to results when user moves a slider
+  function mobileAutoSwitch() {
+    if (window.innerWidth <= 860) {
+      switchTab('outputs');
+    }
+  }
+
+  // Attach auto-switch to all sliders
+  document.querySelectorAll('input[type="range"]').forEach(slider => {
+    slider.addEventListener('change', mobileAutoSwitch);
+  });
+  document.querySelectorAll('.elasticity-btn').forEach(btn => {
+    btn.addEventListener('click', mobileAutoSwitch);
+  });
 
   // ═══════════════════════════════════════════════
   // INIT
